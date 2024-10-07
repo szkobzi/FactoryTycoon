@@ -2,10 +2,8 @@ import pygame
 import sys
 import random
 
-# Initialize Pygame
 pygame.init()
 
-# Constants
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 750
 WHITE = (255, 255, 255)
@@ -24,7 +22,6 @@ ACHIEVEMENT_BACKGROUND = (60, 60, 60)
 ACHIEVEMENT_MENU_WIDTH = 400
 ACHIEVEMENT_MENU_HEIGHT = 400
 
-# Business class
 class Business:
     def __init__(self, name, base_cost, base_income, level=0):
         self.name = name
@@ -45,7 +42,6 @@ class Business:
     def income(self):
         return self.base_income * (1.2 ** self.level) if self.level > 0 else 0
 
-# Game variables
 money = 0
 prestige_points = 0
 income_multiplier = 1.0
@@ -55,7 +51,6 @@ event_duration = 0
 bonus_active = False
 bonus_duration = 0
 
-# Initialize businesses
 businesses = [
     Business("Café", 50, 2, level=1),
     Business("Bakery", 100, 3),
@@ -65,7 +60,6 @@ businesses = [
     Business("Real Estate", 1000, 20)
 ]
 
-# Achievements tracking
 achievements = []
 achievements_reached = set()
 
@@ -100,17 +94,10 @@ def reset_for_prestige():
         income_multiplier *= 1.002
         money = 0
         for business in businesses:
-            if business.name == "Café":
-                business.level = 1
-            else:
-                business.level = 0
+            business.level = 1 if business.name == "Café" else 0
             business.upgrade_cost = business.calculate_upgrade_cost()
 
-        # Generate money instantly from the Coffee Shop
-        coffee_shop_income = businesses[0].income()  # Assuming Coffee Shop is the first business
-        money += coffee_shop_income
-
-# Rest of your code remains unchanged
+        money += businesses[0].income()  # Generate money from the Coffee Shop
 
 def trigger_random_event():
     global current_event, event_duration
@@ -127,11 +114,9 @@ def trigger_random_bonus():
     bonus_active = True
     bonus_duration = 180
 
-# Set up the screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Tycoon Game")
 
-# Load fonts
 font = pygame.font.Font(None, FONT_SIZE)
 large_font = pygame.font.Font(None, LARGE_FONT_SIZE)
 middle_font = pygame.font.Font(None, MIDDLE_FONT_SIZE)
@@ -160,14 +145,12 @@ def draw_business_card(business, x, y):
 def animate_upgrade():
     upgrade_animation.append({"pos": [SCREEN_WIDTH // 2 + 150, 40], "alpha": 255})
 
-# Splash Screen Function
 def splash_screen():
-    fade_in_duration = 2  # Duration for fade-in (seconds)
-    fade_out_duration = 1  # Duration for fade-out (seconds)
+    fade_in_duration = 2
+    fade_out_duration = 1
     fade_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
     fade_surface.fill(BLACK)
 
-    # Splash screen loop
     running = True
     clock = pygame.time.Clock()
     while running:
@@ -176,38 +159,33 @@ def splash_screen():
                 pygame.quit()
                 sys.exit()
 
-        # Draw the splash screen
         screen.fill(DARK_BACKGROUND)
         draw_text("Factory Tycoon", large_font, WHITE, screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
         draw_text("Created by: Scopsy", middle_font, WHITE, screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 40)
 
-        # Handle fade-in effect
         if fade_in_duration > 0:
             alpha = int((1 - (fade_in_duration / 2)) * 255)
             fade_surface.set_alpha(alpha)
             screen.blit(fade_surface, (0, 0))
-            fade_in_duration -= clock.get_time() / 1000  # Decrease duration
+            fade_in_duration -= clock.get_time() / 1000
         else:
-            # Handle fade-out effect
             if fade_out_duration > 0:
                 alpha = int((fade_out_duration / 1) * 255)
                 fade_surface.set_alpha(alpha)
                 screen.blit(fade_surface, (0, 0))
-                fade_out_duration -= clock.get_time() / 1000  # Decrease duration
+                fade_out_duration -= clock.get_time() / 1000
             else:
-                running = False  # Exit the splash screen loop
+                running = False
 
         pygame.display.flip()
         clock.tick(60)
 
-# Main game loop
 clock = pygame.time.Clock()
 income_rate = 0.1
 frames_since_last_event = 0
 frames_since_last_bonus = 0
-show_achievements = False  # Flag for showing achievements
+show_achievements = False
 
-# Run splash screen before starting the main game loop
 splash_screen()
 
 while True:
@@ -223,7 +201,6 @@ while True:
         elif event.type == pygame.MOUSEBUTTONDOWN:
             mouse_clicked = True
 
-    # Income generation
     income_multiplier_effect = 1.0
     if current_event == "Market Boom":
         income_multiplier_effect = 1.5
@@ -247,88 +224,40 @@ while True:
     draw_text(f"Money: ${int(money)}", large_font, WHITE, screen, SCREEN_WIDTH // 2, 40)
 
     for anim in upgrade_animation:
-        draw_text(f"Upgrade bought!", large_font, (0, 255, 0), screen, anim["pos"][0], anim["pos"][1])
+        draw_text(f"Upgrade bought!", large_font, (255, 255, 0), screen, anim["pos"][0], anim["pos"][1])
 
-    draw_text(f"Prestige Points: {prestige_points}", font, WHITE, screen, SCREEN_WIDTH // 2, 80)
+    draw_text("Businesses:", font, WHITE, screen, SCREEN_WIDTH // 2, 100)
 
-    if current_event:
-        draw_text(current_event, font, (255, 0, 0), screen, SCREEN_WIDTH // 2, 650)
+    x = SCREEN_WIDTH // 2 - 150
+    y = 150
+    for business in businesses:
+        draw_business_card(business, x, y)
+        x += 260  # Space between cards
+        if x >= SCREEN_WIDTH - 100:  # Reset x to the beginning if it exceeds screen width
+            x = SCREEN_WIDTH // 2 - 150
+            y += 250  # Move down to the next row
 
-    num_columns = 3  # Number of cards per row
-    card_height = 200  # Height of each card
-    spacing = 60  # Increased spacing between rows to avoid overlap
-
-    for i, business in enumerate(businesses):
-        col = i % num_columns
-        row = i // num_columns
-        x_offset = 20 + col * 260  # X position for business card
-        y_offset = 100 + row * (card_height + spacing)  # Y position for business card
-
-        # Drawing business card
-        draw_business_card(business, x_offset, y_offset)
-
-        # Adjusting the button position based on row and column
-        upgrade_button = draw_button("Upgrade", x_offset + 50, y_offset + card_height + 10, 140, 40)
-
-        if upgrade_button.collidepoint(mouse_pos):
-            draw_button("Upgrade", x_offset + 50, y_offset + card_height + 10, 140, 40, BUTTON_HOVER_COLOR)
-
-        if mouse_clicked and upgrade_button.collidepoint(mouse_pos) and money >= business.upgrade_cost:
-            money -= business.upgrade_cost
-            business.upgrade()
-            animate_upgrade()
-
-    # Achievements button on the left
-    achievements_button = draw_button("Achievements", 20, SCREEN_HEIGHT - 100, 150, 40)
-    if achievements_button.collidepoint(mouse_pos):
-        draw_button("Achievements", 20, SCREEN_HEIGHT - 100, 150, 40, BUTTON_HOVER_COLOR)
-
-    if mouse_clicked and achievements_button.collidepoint(mouse_pos):
-        show_achievements = not show_achievements
-
-    # Prestige button on the right
-    prestige_button = draw_button("Prestige", SCREEN_WIDTH - 150, SCREEN_HEIGHT - 100, 120, 40)
-    if prestige_button.collidepoint(mouse_pos):
-        draw_button("Prestige", SCREEN_WIDTH - 150, SCREEN_HEIGHT - 100, 120, 40, BUTTON_HOVER_COLOR)
-
-    if mouse_clicked and prestige_button.collidepoint(mouse_pos):
+    prestige_button_rect = draw_button("Prestige", 50, SCREEN_HEIGHT - 100, 200, 50)
+    if prestige_button_rect.collidepoint(mouse_pos) and mouse_clicked:
         reset_for_prestige()
 
-    frames_since_last_event += 1
-    frames_since_last_bonus += 1
-    if frames_since_last_event >= 600:
+    random_event_button_rect = draw_button("Trigger Event", 300, SCREEN_HEIGHT - 100, 200, 50)
+    if random_event_button_rect.collidepoint(mouse_pos) and mouse_clicked:
         trigger_random_event()
-        frames_since_last_event = 0
-    if frames_since_last_bonus >= 1200:
-        trigger_random_bonus()
-        frames_since_last_bonus = 0
 
-    if bonus_active:
+    random_bonus_button_rect = draw_button("Trigger Bonus", 550, SCREEN_HEIGHT - 100, 200, 50)
+    if random_bonus_button_rect.collidepoint(mouse_pos) and mouse_clicked:
+        trigger_random_bonus()
+
+    if event_duration > 0:
+        draw_text(current_event, font, WHITE, screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 40)
+        event_duration -= 1
+
+    if bonus_duration > 0:
+        draw_text("Bonus active!", font, WHITE, screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 70)
         bonus_duration -= 1
         if bonus_duration <= 0:
             bonus_active = False
-
-    # Display achievements menu if toggled
-    if show_achievements:
-        achievement_rect = pygame.Rect((SCREEN_WIDTH - ACHIEVEMENT_MENU_WIDTH) // 2, (SCREEN_HEIGHT - ACHIEVEMENT_MENU_HEIGHT) // 2, ACHIEVEMENT_MENU_WIDTH, ACHIEVEMENT_MENU_HEIGHT)
-        pygame.draw.rect(screen, ACHIEVEMENT_BACKGROUND, achievement_rect)
-        draw_text("Achievements", large_font, WHITE, screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - ACHIEVEMENT_MENU_HEIGHT // 2 + 30)
-
-        # Draw the close button (X) in the top-right corner
-        close_button_rect = pygame.Rect(achievement_rect.right - 40, achievement_rect.top + 10, 30, 30)
-        pygame.draw.rect(screen, BLACK, close_button_rect)
-        draw_text("X", font, WHITE, screen, close_button_rect.centerx, close_button_rect.centery)
-
-        for idx, achievement in enumerate(achievements):
-            draw_text(achievement, font, WHITE, screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - ACHIEVEMENT_MENU_HEIGHT // 2 + 70 + idx * 30)
-
-        # Check for close button click
-        if mouse_clicked and close_button_rect.collidepoint(mouse_pos):
-            show_achievements = False
-
-    footer_rect = pygame.Rect(0, SCREEN_HEIGHT - 50, SCREEN_WIDTH, 50)
-    pygame.draw.rect(screen, BLACK, footer_rect)
-    draw_text("Click 'Upgrade' to enhance your businesses!", font, WHITE, screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT - 25)
 
     pygame.display.flip()
     clock.tick(60)
